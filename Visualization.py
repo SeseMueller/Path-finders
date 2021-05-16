@@ -159,20 +159,25 @@ openTiles.append((0, 0))  # Adds the beginning to the open Tiles
 allTiles[0][0].distToBeginning = 0
 
 
-# Generating Walls with the chosen algorithm
+def generateWalls():
+    """Generates the Walls of the Grid."""
+    # Generating Walls with the chosen algorithm
+
+    global wallTiles
+
+    for i in range(numrects):
+        for j in range(numrects):
+            if (wallAlgorithm(i, j)):
+                wallTiles.append((i, j))
+
+    # Removes Beginning and End Points from walls
+    if ((0, 0) in wallTiles):
+        wallTiles.remove((0, 0))
+    if((numrects-1, numrects-1) in wallTiles):
+        wallTiles.remove((numrects-1, numrects-1))
 
 
-for i in range(numrects):
-    for j in range(numrects):
-        if (wallAlgorithm(i, j)):
-            wallTiles.append((i, j))
-
-
-# Removes Beginning and End Points from walls
-if ((0, 0) in wallTiles):
-    wallTiles.remove((0, 0))
-if((numrects-1, numrects-1) in wallTiles):
-    wallTiles.remove((numrects-1, numrects-1))
+generateWalls()
 
 
 def backtracePath():
@@ -288,31 +293,58 @@ def oneIteration(algorithm):
     return outArray
 
 
-# Draws the entire grid once, with walls in concideration
-for i in range(numrects):
-    for j in range(numrects):
-        tileColor = "white"
-        if (i == 0 and j == 0):  # Gives the beginning node a yellow color
-            tileColor = "yellow"
-        if(i == numrects-1 and j == numrects-1):  # Gives the end node an orange color
-            tileColor = "orange"
+def drawGridInit():
+    """Draws the entire grid once, with walls in concideration."""
+    for i in range(numrects):
+        for j in range(numrects):
+            tileColor = "white"
+            if (i == 0 and j == 0):  # Gives the beginning node a yellow color
+                tileColor = "yellow"
+            if(i == numrects-1 and j == numrects-1):  # Gives the end node an orange color
+                tileColor = "orange"
 
-        if ((i, j) in wallTiles):  # Draws walls in black
-            tileColor = "black"
+            if ((i, j) in wallTiles):  # Draws walls in black
+                tileColor = "black"
 
-        x1 = borderWidth + (i*size)
-        y1 = borderWidth + (j*size)
-        xlength = size - borderWidth
-        ylength = size - borderWidth
-        pygame.draw.rect(screen, tileColor, (x1, y1, xlength, ylength))
+            x1 = borderWidth + (i*size)
+            y1 = borderWidth + (j*size)
+            xlength = size - borderWidth
+            ylength = size - borderWidth
+            pygame.draw.rect(screen, tileColor, (x1, y1, xlength, ylength))
 
-numframe = 0 #The current frame number. Mainly used for debugging.
+
+drawGridInit()
+
+numframe = 0  # The current frame number. Mainly used for debugging.
 
 # Main drawing loop:
 while not done:
     for event in pygame.event.get():
-        if event.type == pygame.QUIT: #Ends the loop if the game should quit
+        if event.type == pygame.QUIT:  # Ends the loop if the game should quit
             done = True
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_RETURN:  # Refreshes the grid if return is hit
+
+                pathDrawn = False
+                pathFound = False
+
+                openTiles = []
+                closedTiles = []
+                wallTiles = []
+
+                allTiles = [[Tile() for i in range(numrects)]
+                            for i in range(numrects)]
+
+                openTiles.append((0, 0))
+                allTiles[0][0].distToBeginning = 0
+
+                noiseSeed = random.randrange(0, 1000)
+                mySimplex = opensimplex.OpenSimplex(seed=noiseSeed)
+                generateWalls()
+
+                drawGridInit()
+
+                pygame.display.flip()
 
     # A list of Updates to the grid. Contains a tuple of coordinates and a color to draw that tile in. (structure: [(tupleX,tupleY),"Color"],[...])
     updates = []
